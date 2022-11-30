@@ -51,7 +51,6 @@ GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted
 
 # Load merge network
 opt = TestOptions().parse()
-global pix2pixmodel
 pix2pixmodel = Pix2Pix4DepthModel(opt)
 pix2pixmodel.save_dir = './pix2pix/checkpoints/mergemodel'
 pix2pixmodel.load_networks('latest')
