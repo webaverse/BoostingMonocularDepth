@@ -47,51 +47,17 @@ GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted
 
 # MAIN PART OF OUR METHOD
 def run(img, option):
-    # Load merge network
-    opt = TestOptions().parse()
-    global pix2pixmodel
-    pix2pixmodel = Pix2Pix4DepthModel(opt)
-    pix2pixmodel.save_dir = './pix2pix/checkpoints/mergemodel'
-    pix2pixmodel.load_networks('latest')
-    pix2pixmodel.eval()
-
-    # Decide which depth estimation network to load
-    if option.depthNet == 0:
-        midas_model_path = "midas/model.pt"
-        global midasmodel
-        midasmodel = MidasNet(midas_model_path, non_negative=True)
-        midasmodel.to(device)
-        midasmodel.eval()
-    elif option.depthNet == 1:
-        global srlnet
-        srlnet = DepthNet.DepthNet()
-        srlnet = torch.nn.DataParallel(srlnet, device_ids=[0]).cuda()
-        checkpoint = torch.load('structuredrl/model.pth.tar')
-        srlnet.load_state_dict(checkpoint['state_dict'])
-        srlnet.eval()
-    elif option.depthNet == 2:
-        global leresmodel
-        leres_model_path = "res101.pth"
-        checkpoint = torch.load(leres_model_path)
-        leresmodel = RelDepthModel(backbone='resnext101')
-        leresmodel.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
-                                    strict=True)
-        del checkpoint
-        torch.cuda.empty_cache()
-        leresmodel.to(device)
-        leresmodel.eval()
-
     # Generating required directories
     result_dir = option.output_dir
-    os.makedirs(result_dir, exist_ok=True)
+    # os.makedirs(result_dir, exist_ok=True)
 
     if option.savewholeest:
         whole_est_outputpath = option.output_dir + '_wholeimage'
-        os.makedirs(whole_est_outputpath, exist_ok=True)
+        # os.makedirs(whole_est_outputpath, exist_ok=True)
 
     if option.savepatchs:
         patchped_est_outputpath = option.output_dir + '_patchest'
-        os.makedirs(patchped_est_outputpath, exist_ok=True)
+        # os.makedirs(patchped_est_outputpath, exist_ok=True)
 
     # Generate mask used to smoothly blend the local pathc estimations to the base estimate.
     # It is arbitrarily large to avoid artifacts during rescaling for each crop.
@@ -665,6 +631,53 @@ def getDepth():
     if img.ndim == 2:
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) / 255.0
+
+
+
+
+
+
+
+
+
+    # Load merge network
+    opt = TestOptions().parse()
+    global pix2pixmodel
+    pix2pixmodel = Pix2Pix4DepthModel(opt)
+    pix2pixmodel.save_dir = './pix2pix/checkpoints/mergemodel'
+    pix2pixmodel.load_networks('latest')
+    pix2pixmodel.eval()
+
+    # Decide which depth estimation network to load
+    if option_.depthNet == 0:
+        midas_model_path = "midas/model.pt"
+        global midasmodel
+        midasmodel = MidasNet(midas_model_path, non_negative=True)
+        midasmodel.to(device)
+        midasmodel.eval()
+    elif option_.depthNet == 1:
+        global srlnet
+        srlnet = DepthNet.DepthNet()
+        srlnet = torch.nn.DataParallel(srlnet, device_ids=[0]).cuda()
+        checkpoint = torch.load('structuredrl/model.pth.tar')
+        srlnet.load_state_dict(checkpoint['state_dict'])
+        srlnet.eval()
+    elif option_.depthNet == 2:
+        global leresmodel
+        leres_model_path = "res101.pth"
+        checkpoint = torch.load(leres_model_path)
+        leresmodel = RelDepthModel(backbone='resnext101')
+        leresmodel.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
+                                    strict=True)
+        del checkpoint
+        torch.cuda.empty_cache()
+        leresmodel.to(device)
+        leresmodel.eval()
+
+
+
+
+
 
     depth_bytes_f32 = run(img, option_)
 
