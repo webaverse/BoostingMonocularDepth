@@ -45,6 +45,30 @@ factor = None
 whole_size_threshold = 3000  # R_max from the paper
 GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted 
 
+def depthToBytes(depth):
+    # write_pfm(path + ".pfm", depth.astype(np.float32))
+    # if colored == True:
+    #     bits = 1
+
+    depth_min = depth.min()
+    depth_max = depth.max()
+
+    # max_val = (2**(8*bits))-1
+    # if depth_max>max_val:
+    #     print('Warning: Depth being clipped')
+    #
+    # if depth_max - depth_min > np.finfo("float").eps:
+    #     out = depth
+    #     out [depth > max_val] = max_val
+    # else:
+    #     out = 0
+
+    # out is a cv2 image; convert to the raw float bytes
+    out = (depth - depth_min) / (depth_max - depth_min)
+    out = out.astype(np.float32)
+    bytes = out.tobytes()
+    return bytes
+
 # MAIN PART OF OUR METHOD
 def run(img, option):
     # Generating required directories
@@ -104,15 +128,17 @@ def run(img, option):
     whole_estimate = doubleestimate(img, option.net_receptive_field_size, whole_image_optimal_size,
                                     option.pix2pixsize, option.depthNet)
     if option.R0 or option.R20:
-        path = os.path.join(result_dir, images.name)
+        # path = os.path.join(result_dir, images.name)
         if option.output_resolution == 1:
-            midas.utils.write_depth(path, cv2.resize(whole_estimate, (input_resolution[1], input_resolution[0]),
-                                                        interpolation=cv2.INTER_CUBIC),
-                                    bits=2, colored=option.colorize_results)
+            depth = cv2.resize(whole_estimate, (input_resolution[1], input_resolution[0]),
+                interpolation=cv2.INTER_CUBIC)
+            # midas.utils.write_depth(path, cv2.resize(whole_estimate, (input_resolution[1], input_resolution[0]),
+            #                                             interpolation=cv2.INTER_CUBIC),
+            #                         bits=2, colored=option.colorize_results)
         else:
-            midas.utils.write_depth(path, whole_estimate, bits=2, colored=option.colorize_results)
-        # continue
-        assert False
+            depth = whole_estimate
+            # midas.utils.write_depth(path, whole_estimate, bits=2, colored=option.colorize_results)
+        return depthToBytes(depth)
 
     # Output double estimation if required
     if option.savewholeest:
@@ -136,18 +162,21 @@ def run(img, option):
         print("No Local boosting. Specified Max Res is smaller than R20")
         print(option.max_res)
         print(whole_image_optimal_size)
-        path = os.path.join(result_dir, images.name)
+        # path = os.path.join(result_dir, images.name)
         if option.output_resolution == 1:
-            midas.utils.write_depth(path,
-                                    cv2.resize(whole_estimate,
-                                                (input_resolution[1], input_resolution[0]),
-                                                interpolation=cv2.INTER_CUBIC), bits=2,
-                                    colored=option.colorize_results)
+            depth = cv2.resize(whole_estimate,
+                (input_resolution[1], input_resolution[0]),
+                interpolation=cv2.INTER_CUBIC)
+            # midas.utils.write_depth(path,
+            #                         cv2.resize(whole_estimate,
+            #                                     (input_resolution[1], input_resolution[0]),
+            #                                     interpolation=cv2.INTER_CUBIC), bits=2,
+            #                         colored=option.colorize_results)
         else:
-            midas.utils.write_depth(path, whole_estimate, bits=2,
-                                    colored=option.colorize_results)
-        # continue
-        assert False
+            depth = whole_estimate
+            # midas.utils.write_depth(path, whole_estimate, bits=2,
+            #                         colored=option.colorize_results)
+        return depthToBytes(depth)
 
     # Compute the default target resolution.
     if img.shape[0] > img.shape[1]:
@@ -285,36 +314,7 @@ def run(img, option):
     else:
         depth = imageandpatchs.estimation_updated_image
 
-
-
-
-
-
-
-
-
-    # write_pfm(path + ".pfm", depth.astype(np.float32))
-    # if colored == True:
-    #     bits = 1
-
-    depth_min = depth.min()
-    depth_max = depth.max()
-
-    # max_val = (2**(8*bits))-1
-    # if depth_max>max_val:
-    #     print('Warning: Depth being clipped')
-    #
-    # if depth_max - depth_min > np.finfo("float").eps:
-    #     out = depth
-    #     out [depth > max_val] = max_val
-    # else:
-    #     out = 0
-
-    # out is a cv2 image; convert to the raw float bytes
-    out = (depth - depth_min) / (depth_max - depth_min)
-    out = out.astype(np.float32)
-    bytes = out.tobytes()
-    return bytes
+    return depthToBytes(depth)
 
     # # Output the result
     # path = os.path.join(result_dir, imageandpatchs.name)
