@@ -49,6 +49,7 @@ def depthToBytes(depth):
     # depth_min = depth.min()
     # depth_max = depth.max()
     # out = (depth - depth_min) / (depth_max - depth_min)
+    out = depth
     
     out = out.astype(np.float32)
     bytes = out.tobytes()
