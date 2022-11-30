@@ -63,7 +63,6 @@ if option.depthNet == 0:
     midasmodel.to(device)
     midasmodel.eval()
 elif option.depthNet == 1:
-    global srlnet
     srlnet = DepthNet.DepthNet()
     srlnet = torch.nn.DataParallel(srlnet, device_ids=[0]).cuda()
     checkpoint = torch.load('structuredrl/model.pth.tar')
