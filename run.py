@@ -59,7 +59,6 @@ pix2pixmodel.eval()
 # Decide which depth estimation network to load
 if option.depthNet == 0:
     midas_model_path = "midas/model.pt"
-    global midasmodel
     midasmodel = MidasNet(midas_model_path, non_negative=True)
     midasmodel.to(device)
     midasmodel.eval()
@@ -71,7 +70,6 @@ elif option.depthNet == 1:
     srlnet.load_state_dict(checkpoint['state_dict'])
     srlnet.eval()
 elif option.depthNet == 2:
-    global leresmodel
     leres_model_path = "res101.pth"
     checkpoint = torch.load(leres_model_path)
     leresmodel = RelDepthModel(backbone='resnext101')
@@ -169,7 +167,6 @@ def run(img, option):
 
     # Compute the multiplier described in section 6 of the main paper to make sure our initial patch can select
     # small high-density regions of the image.
-    global factor
     factor = max(min(1, 4 * patch_scale * whole_image_optimal_size / whole_size_threshold), 0.2)
     print('Adjust factor is:', 1/factor)
 
