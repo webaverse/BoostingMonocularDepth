@@ -105,6 +105,16 @@ def run(dataset, option):
     # Go through all images in input directory
     print("start processing")
     for image_ind, images in enumerate(dataset):
+
+
+
+
+
+
+
+
+
+
         print('processing image', image_ind, ':', images.name)
 
         # Load image from dataset
@@ -283,6 +293,61 @@ def run(dataset, option):
             # blending at the boundaries of the patch region.
             tobemergedto[h1:h2, w1:w2] = np.multiply(tobemergedto[h1:h2, w1:w2], 1 - mask) + np.multiply(merged, mask)
             imageandpatchs.set_updated_estimate(tobemergedto)
+
+
+
+
+
+
+
+
+
+
+
+        depth = None
+        if option.output_resolution == 1:
+            depth = cv2.resize(imageandpatchs.estimation_updated_image,
+                (input_resolution[1], input_resolution[0]),
+                interpolation=cv2.INTER_CUBIC)
+        else:
+            depth = imageandpatchs.estimation_updated_image
+
+
+
+
+
+
+
+
+
+        # write_pfm(path + ".pfm", depth.astype(np.float32))
+        # if colored == True:
+        #     bits = 1
+
+        depth_min = depth.min()
+        depth_max = depth.max()
+
+        # max_val = (2**(8*bits))-1
+        # if depth_max>max_val:
+        #     print('Warning: Depth being clipped')
+        #
+        # if depth_max - depth_min > np.finfo("float").eps:
+        #     out = depth
+        #     out [depth > max_val] = max_val
+        # else:
+        #     out = 0
+
+        # out is a cv2 image; convert to the raw float bytes
+        out = (depth - depth_min) / (depth_max - depth_min)
+        out = out.astype(np.float32)
+        bytes = out.tobytes()
+
+        
+
+
+
+
+
 
         # Output the result
         path = os.path.join(result_dir, imageandpatchs.name)
