@@ -168,6 +168,8 @@ def run(img, option):
     # Check if Local boosting is beneficial.
     if option.max_res < whole_image_optimal_size:
         print("No Local boosting. Specified Max Res is smaller than R20")
+        print(option.max_res)
+        print(whole_image_optimal_size)
         path = os.path.join(result_dir, images.name)
         if option.output_resolution == 1:
             midas.utils.write_depth(path,
