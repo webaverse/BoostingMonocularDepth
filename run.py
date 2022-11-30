@@ -46,10 +46,10 @@ whole_size_threshold = 3000  # R_max from the paper
 GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted 
 
 def depthToBytes(depth):
-    depth_min = depth.min()
-    depth_max = depth.max()
-
-    out = (depth - depth_min) / (depth_max - depth_min)
+    # depth_min = depth.min()
+    # depth_max = depth.max()
+    # out = (depth - depth_min) / (depth_max - depth_min)
+    
     out = out.astype(np.float32)
     bytes = out.tobytes()
     return bytes
