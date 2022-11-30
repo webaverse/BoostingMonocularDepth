@@ -45,71 +45,66 @@ factor = None
 whole_size_threshold = 3000  # R_max from the paper
 GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted 
 
-
-
-
-
-# Load merge network
-opt = TestOptions().parse()
-pix2pixmodel = Pix2Pix4DepthModel(opt)
-pix2pixmodel.save_dir = './pix2pix/checkpoints/mergemodel'
-pix2pixmodel.load_networks('latest')
-pix2pixmodel.eval()
-
-# Decide which depth estimation network to load
-if option.depthNet == 0:
-    midas_model_path = "midas/model.pt"
-    midasmodel = MidasNet(midas_model_path, non_negative=True)
-    midasmodel.to(device)
-    midasmodel.eval()
-elif option.depthNet == 1:
-    srlnet = DepthNet.DepthNet()
-    srlnet = torch.nn.DataParallel(srlnet, device_ids=[0]).cuda()
-    checkpoint = torch.load('structuredrl/model.pth.tar')
-    srlnet.load_state_dict(checkpoint['state_dict'])
-    srlnet.eval()
-elif option.depthNet == 2:
-    leres_model_path = "res101.pth"
-    checkpoint = torch.load(leres_model_path)
-    leresmodel = RelDepthModel(backbone='resnext101')
-    leresmodel.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
-                                strict=True)
-    del checkpoint
-    torch.cuda.empty_cache()
-    leresmodel.to(device)
-    leresmodel.eval()
-
-# Generating required directories
-result_dir = option.output_dir
-os.makedirs(result_dir, exist_ok=True)
-
-if option.savewholeest:
-    whole_est_outputpath = option.output_dir + '_wholeimage'
-    os.makedirs(whole_est_outputpath, exist_ok=True)
-
-if option.savepatchs:
-    patchped_est_outputpath = option.output_dir + '_patchest'
-    os.makedirs(patchped_est_outputpath, exist_ok=True)
-
-# Generate mask used to smoothly blend the local pathc estimations to the base estimate.
-# It is arbitrarily large to avoid artifacts during rescaling for each crop.
-mask_org = generatemask((3000, 3000))
-mask = mask_org.copy()
-
-
-
-
-
-
-# Value x of R_x defined in the section 5 of the main paper.
-r_threshold_value = 0.2
-if option.R0:
-    r_threshold_value = 0
-elif option.R20:
-    r_threshold_value = 0.2
-
 # MAIN PART OF OUR METHOD
 def run(img, option):
+    # Load merge network
+    opt = TestOptions().parse()
+    global pix2pixmodel
+    pix2pixmodel = Pix2Pix4DepthModel(opt)
+    pix2pixmodel.save_dir = './pix2pix/checkpoints/mergemodel'
+    pix2pixmodel.load_networks('latest')
+    pix2pixmodel.eval()
+
+    # Decide which depth estimation network to load
+    if option.depthNet == 0:
+        midas_model_path = "midas/model.pt"
+        global midasmodel
+        midasmodel = MidasNet(midas_model_path, non_negative=True)
+        midasmodel.to(device)
+        midasmodel.eval()
+    elif option.depthNet == 1:
+        global srlnet
+        srlnet = DepthNet.DepthNet()
+        srlnet = torch.nn.DataParallel(srlnet, device_ids=[0]).cuda()
+        checkpoint = torch.load('structuredrl/model.pth.tar')
+        srlnet.load_state_dict(checkpoint['state_dict'])
+        srlnet.eval()
+    elif option.depthNet == 2:
+        global leresmodel
+        leres_model_path = "res101.pth"
+        checkpoint = torch.load(leres_model_path)
+        leresmodel = RelDepthModel(backbone='resnext101')
+        leresmodel.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."),
+                                    strict=True)
+        del checkpoint
+        torch.cuda.empty_cache()
+        leresmodel.to(device)
+        leresmodel.eval()
+
+    # Generating required directories
+    result_dir = option.output_dir
+    os.makedirs(result_dir, exist_ok=True)
+
+    if option.savewholeest:
+        whole_est_outputpath = option.output_dir + '_wholeimage'
+        os.makedirs(whole_est_outputpath, exist_ok=True)
+
+    if option.savepatchs:
+        patchped_est_outputpath = option.output_dir + '_patchest'
+        os.makedirs(patchped_est_outputpath, exist_ok=True)
+
+    # Generate mask used to smoothly blend the local pathc estimations to the base estimate.
+    # It is arbitrarily large to avoid artifacts during rescaling for each crop.
+    mask_org = generatemask((3000, 3000))
+    mask = mask_org.copy()
+
+    # Value x of R_x defined in the section 5 of the main paper.
+    r_threshold_value = 0.2
+    if option.R0:
+        r_threshold_value = 0
+    elif option.R20:
+        r_threshold_value = 0.2
+
     # Go through all images in input directory
     # print("start processing")
     # for image_ind, images in enumerate(dataset):
@@ -166,6 +161,7 @@ def run(img, option):
 
     # Compute the multiplier described in section 6 of the main paper to make sure our initial patch can select
     # small high-density regions of the image.
+    global factor
     factor = max(min(1, 4 * patch_scale * whole_image_optimal_size / whole_size_threshold), 0.2)
     print('Adjust factor is:', 1/factor)
 
