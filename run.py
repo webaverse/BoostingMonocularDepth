@@ -145,7 +145,8 @@ def run(img, option):
                                     bits=2, colored=option.colorize_results)
         else:
             midas.utils.write_depth(path, whole_estimate, bits=2, colored=option.colorize_results)
-        continue
+        # continue
+        assert False
 
     # Output double estimation if required
     if option.savewholeest:
@@ -177,7 +178,8 @@ def run(img, option):
         else:
             midas.utils.write_depth(path, whole_estimate, bits=2,
                                     colored=option.colorize_results)
-        continue
+        # continue
+        assert False
 
     # Compute the default target resolution.
     if img.shape[0] > img.shape[1]:
