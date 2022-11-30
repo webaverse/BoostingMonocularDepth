@@ -46,24 +46,9 @@ whole_size_threshold = 3000  # R_max from the paper
 GPU_threshold = 1600 - 32 # Limit for the GPU (NVIDIA RTX 2080), can be adjusted 
 
 def depthToBytes(depth):
-    # write_pfm(path + ".pfm", depth.astype(np.float32))
-    # if colored == True:
-    #     bits = 1
-
     depth_min = depth.min()
     depth_max = depth.max()
 
-    # max_val = (2**(8*bits))-1
-    # if depth_max>max_val:
-    #     print('Warning: Depth being clipped')
-    #
-    # if depth_max - depth_min > np.finfo("float").eps:
-    #     out = depth
-    #     out [depth > max_val] = max_val
-    # else:
-    #     out = 0
-
-    # out is a cv2 image; convert to the raw float bytes
     out = (depth - depth_min) / (depth_max - depth_min)
     out = out.astype(np.float32)
     bytes = out.tobytes()
