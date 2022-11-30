@@ -7,4 +7,5 @@ opencv-python
 scikit-image
 scipy
 gdown
-
+pillow==6.1
+flask
